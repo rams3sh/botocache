@@ -49,7 +49,7 @@ class SQLiteLRUCache(MutableMapping):
         self.path.mkdir(parents=True, exist_ok=True)
         # Lambda does not support multiprocessing based locks due to issues with /dev/shm
         # Hence using a file based lock
-        self.lock = FileLock(lock_file=os.path.join(self.path, "botocache.lock"), timeout=10)
+        self.lock = FileLock(lock_file=os.path.join(self.path, "botocache.lock"))
         self.db_name = "botocache.db"
 
         if clear_on_start:
