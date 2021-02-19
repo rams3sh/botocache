@@ -38,9 +38,6 @@ class SQLiteLRUCache(MutableMapping):
         # Absolute path to the cache
         path = Path(path).absolute() if path else Path(".") / ".cache"
 
-        # Create the directory if not exists
-        path.mkdir(parents=True, exist_ok=True)
-
         self.path = path
         self.ttl: Optional[int] = ttl
         self.maxsize = maxsize
@@ -54,32 +51,38 @@ class SQLiteLRUCache(MutableMapping):
         if clear_on_start:
             # Clear the cache
             shutil.rmtree(self.path)
-            path.mkdir(parents=True, exist_ok=True)
 
         self.cache_db_path = os.path.join(str(self.path), self.db_name)
 
         with self as cursor:
-            # Create the table if it doesn't exist
-            cursor.execute(
-                """
-            create table if not exists cache(
-                key text primary key,
-                value blob,
-                created_at datetime not null default (strftime('%Y-%m-%d %H:%M:%f', 'NOW')),
-                last_accessed_at datetime not null default (strftime('%Y-%m-%d %H:%M:%f', 'NOW'))
-    
-    
-            );
-            """
-            )
-
+            self.create_cache_table(cursor=cursor)
         # Delete any existing expired entries
         self.__delete_expired_entries()
 
+    @staticmethod
+    def create_cache_table(cursor):
+        cursor.execute(
+            """
+        create table if not exists cache(
+            key text primary key,
+            value blob,
+            created_at datetime not null default (strftime('%Y-%m-%d %H:%M:%f', 'NOW')),
+            last_accessed_at datetime not null default (strftime('%Y-%m-%d %H:%M:%f', 'NOW'))
+
+
+        );
+        """
+        )
+
     def __enter__(self):
         self.lock.acquire()
+        # Creates the cache directory if it does not exist.
+        self.path.mkdir(parents=True, exist_ok=True)
         self.con = sqlite3.connect(self.cache_db_path)
-        return self.con.cursor()
+        cursor = self.con.cursor()
+        # Creates a cache table if it does not exists.
+        self.create_cache_table(cursor=cursor)
+        return cursor
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.con.commit()
