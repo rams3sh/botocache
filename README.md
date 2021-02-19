@@ -51,7 +51,15 @@ little to suit the needs of botocache. This  was really a life saver. Thanks to 
 ```
 pip3 install git+https://github.com/rams3sh/botocache.git
 ```
-Note: Tested in Python 3.8.5
+Note: 
+
+If you encounter `ModuleNotFoundError: No module named 'boto3'` or `ModuleNotFoundError: No module named 'botocore'` error while testing in a fresh environment without any other boto3 / botocore package installation, it's normal. 
+
+Botocache does not include boto3 / botocore sdk as part of it's requirements.txt though botocache is dependant on them.
+It is expected that the target environment where botocache is being installed has some version of boto3 / botocore present already. 
+
+This is to avoid version conflicts between the project's boto library dependency and the botocache's  dependency since botocache is expected to work with any version of boto library.
+
 
 
 
@@ -129,3 +137,9 @@ Any subsequent call having matching attributes will be returned with the value s
 
 * Botocache is completely dependent on underlying [SQLITE's mechanism](https://www.sqlite.org/lockingv3.html) 
 for handling race conditions of concurrent DB read / write across multiple processes. 
+
+## Known Issues
+
+---
+* API calls pertaining to S3 Bucket File download will not be cached as it uses io.BufferedReader which is non-pickeable 
+  and botocache currently supports only pickleable objects. 

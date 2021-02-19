@@ -1,2 +1,6 @@
-boto3==1.17.5 #This should install botocore as well
+# boto3 / boto cache is not included as part of the requirements.txt
+# since the target system where the botocache will be used is expected to have a version of boto3 / botocore installed.
+# Botocache is supposed to work with any version of boto3 / botocore. This will also avoid creating a conflict
+# between version of boto library used by botocache and target project
+
 cachetools==4.2.1

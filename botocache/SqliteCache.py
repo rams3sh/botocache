@@ -120,10 +120,10 @@ class SQLiteLRUCache(MutableMapping):
             self.popitem()
 
         with self as cursor:
-            cursor.execute(
-                "insert or replace into cache(key, value) VALUES (?, ?)",
-                (key, pickle.dumps(value)),
-            )
+                cursor.execute(
+                    "insert or replace into cache(key, value) VALUES (?, ?)",
+                    (key, pickle.dumps(value)),
+                )
 
     def __delitem__(self, key):
         with self as cursor:

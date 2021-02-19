@@ -4,10 +4,14 @@ import hashlib
 from collections import OrderedDict
 from unittest.mock import patch
 from botocache.SqliteCache import SQLiteLRUCache
+import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.WARNING)
 
 
 def botocache_context(cache_max_size=100, cache_ttl=900, cache_path=".cache",
-                      call_verbs_to_cache=["List", "Get", "Describe"],):
+                      call_verbs_to_cache=["List", "Get", "Describe"],supress_warning_message=False):
 
     cache_type = SQLiteLRUCache
 
@@ -17,7 +21,7 @@ def botocache_context(cache_max_size=100, cache_ttl=900, cache_path=".cache",
             cache_key = \
                 "{access_key}_{service}_{action}_{region}_{api_params}".format(
                     # Access Key to identify the Principal
-                    access_key=self._request_signer.__dict__["_credentials"].__dict__["access_key"],
+                    access_key=self._request_signer._credentials.access_key,
                     # Service for identifying which service is being queried
                     service=self._service_model.service_name,
                     # Action of the service
@@ -34,7 +38,12 @@ def botocache_context(cache_max_size=100, cache_ttl=900, cache_path=".cache",
         def _make_api_call(self, operation_name, api_params):
             action = operation_name
             if any([action.startswith(call) for call in call_verbs_to_cache]):
-                return self._make_cached_api_call(operation_name, api_params)
+                try:
+                    return self._make_cached_api_call(operation_name, api_params)
+                except Exception as e:
+                    # In case of any errors with caching , normal make api will be called
+                    if not supress_warning_message:
+                        logger.error("Error encountered : {}. Retrying the same call without cached context.".format(e))
             return super()._make_api_call(operation_name, api_params)
 
         @cached(cache=cache_type(maxsize=cache_max_size, ttl=cache_ttl, path=cache_path), key=return_cache_key)
