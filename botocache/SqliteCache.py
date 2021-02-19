@@ -5,7 +5,7 @@ from pathlib import Path
 import pickle
 import shutil
 import os
-import multiprocessing
+from filelock import FileLock
 
 
 class SQLiteLRUCache(MutableMapping):
@@ -46,7 +46,10 @@ class SQLiteLRUCache(MutableMapping):
         # Though this is little heavy compared to threading's lock, but this helps this cache from
         # remaining agnostic of where it is being used (under thread / process context).
         # The lock is to avoid race conditions while accessing the sqlite cache database.
-        self.lock = multiprocessing.Lock()
+        self.path.mkdir(parents=True, exist_ok=True)
+        # Lambda does not support multiprocessing based locks due to issues with /dev/shm
+        # Hence using a file based lock
+        self.lock = FileLock(lock_file=os.path.join(self.path, "botocache.lock"), timeout=10)
         self.db_name = "botocache.db"
 
         if clear_on_start:
