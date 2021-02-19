@@ -45,6 +45,7 @@ class SQLiteLRUCache(MutableMapping):
 
         # Though this is little heavy compared to threading's lock, but this helps this cache from
         # remaining agnostic of where it is being used (under thread / process context).
+        # The lock is to avoid race conditions while accessing the sqlite cache database.
         self.lock = multiprocessing.Lock()
         self.db_name = "botocache.db"
 
@@ -54,8 +55,6 @@ class SQLiteLRUCache(MutableMapping):
 
         self.cache_db_path = os.path.join(str(self.path), self.db_name)
 
-        with self as cursor:
-            self.create_cache_table(cursor=cursor)
         # Delete any existing expired entries
         self.__delete_expired_entries()
 
@@ -86,6 +85,7 @@ class SQLiteLRUCache(MutableMapping):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.con.commit()
+        # Close is necessary after every transaction as the same cache may be used by other programs.
         self.con.close()
         self.lock.release()
 
