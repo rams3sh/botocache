@@ -1,8 +1,11 @@
 # test scripts
 main.py
 
-# Pycharm Folders
+# Hidden Folders
+.*/
 .idea/
+
+
 old/
 logs/
 cache/
