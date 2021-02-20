@@ -5,6 +5,8 @@ main.py
 .*/
 .idea/
 
+# Don't ignore Github Workflow
+!.github/
 
 old/
 logs/

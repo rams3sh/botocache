@@ -47,8 +47,18 @@ little to suit the needs of botocache. This  was really a life saver. Thanks to 
 ## Installation
 
 ---
-
+Stable release installation (PyPI) :-
+```bash
+pip3 install botocache
 ```
+
+Test release installation (Test PyPI)
+```bash
+pip install -i https://test.pypi.org/pypi/ --extra-index-url https://pypi.org/simple botocache
+```
+
+Installation directly from this Repository:-
+```bash
 pip3 install git+https://github.com/rams3sh/botocache.git
 ```
 
