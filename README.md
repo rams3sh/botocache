@@ -3,7 +3,7 @@
 Caching layer for Boto / Botocore libraries.
 
 
-## Little Background
+## Background
 
 ---
 
@@ -31,18 +31,13 @@ the wait times. Thus the birth of botocache.
 Botocache caches the response of API calls initiated through boto3 / botocore.
 Any subsequent redundant call will end up getting the previously cached response from Botocache as long as the call is
 within the expiry timeout of the cached response. 
-  
+
+Botocache can work with any cache library that is based on [cachetools](https://github.com/tkem/cachetools/)
+
 It uses the unittest module's patch as the magic component to achieve this. :wink:
 
 This project is little hacky given the nature how it achieves caching, but it gets the job done. 
 
-## Credits 
-
----
-
-[cachetools_ext](https://github.com/olirice/cachetools_ext) - I shamelessly copied the base code for sqlite based 
-cache from [here](https://github.com/olirice/cachetools_ext/blob/develop/cachetools_ext/sqlite.py) and modified it a 
-little to suit the needs of botocache. This  was really a life saver. Thanks to [Oliver Rice](https://github.com/olirice).
 
 ## Installation
 
@@ -67,30 +62,33 @@ pip3 install git+https://github.com/rams3sh/botocache.git
 
 ---
 
-Below snippet demonstrates usage of botocache. 
-
+Below snippet demonstrates usage of botocache.
 
 ```python
 from boto3.session import Session
+from cachetools_ext.fs import FSLRUCache
+
 from botocache.botocache import botocache_context
 
-with botocache_context(cache_ttl=900, cache_path=".cache",
-                       call_verbs_to_cache=["List", "Get", "Describe"]):
-    cached_session = Session()
-    cached_client = cached_session.client('iam')
-    paginator = cached_client.get_paginator('list_users')
-    for page in paginator.paginate():
-        print(page)
-        
+cache = FSLRUCache(ttl=900, path=".cache", maxsize=1000)
+
+# action_regex_to_cache parameter consists list of regex to be matched against a given action for considering the call to be cached
+with botocache_context(cache=cache,
+                       action_regex_to_cache=["List.*", "Get.*", "Describe.*"]):
+  cached_session = Session()
+  cached_client = cached_session.client('iam')
+  paginator = cached_client.get_paginator('list_users')
+  for page in paginator.paginate():
+    print(page)
+
 """
 Don't do this, if you want to have a new session without caching. 
 The below paginator object was initialised under the botocache context which means it's subsequent 
 attributes was initialised with patched Botocache class leading it to still use the backend cache. 
 """
 for page in paginator.paginate():
-    print(page)
-    
-    
+  print(page)
+
 """
 Always use a fresh initialised session client and subsequent new objects outside the context of botocache to use 
 boto3 without caching layer. Below is an example. 
@@ -100,28 +98,20 @@ non_cached_session = Session()
 non_cached_client = non_cached_session.client('iam')
 paginator = non_cached_client.get_paginator('list_users')
 for page in paginator.paginate():
-    print(page)
-
-# New botocache context with a new cache
-new_botocache_context = botocache_context(cache_ttl=900, cache_path=".new_cache",
-                       call_verbs_to_cache=["List", "Get", "Describe"])
-
-with new_botocache_context:
-    cached_session = Session()
-    cached_client = cached_session.client('iam')
-    paginator = cached_client.get_paginator('list_users')
-    for page in paginator.paginate():
-        print(page)
+  print(page)
 
 ```
+**Note:** 
 
-Note: The same cache can be used across multiple parallel running python scripts with each script contibuting 
-a new response to the cache. 
+Botocache has been tested with cachetools_ext's FSLRU cache, but it should logically work with any cache that is 
+compatible with cachetools.
+
+
 ## Disclaimer(s)
 
 ---
 
-* This project was created mainly to support my internal use cases. 
+* This project was created mainly to support my specific internal use cases. 
 Hence, there is a good scope of it having bugs and functional issues. Feel free to raise a PR / Issue in those cases.
 
 
@@ -129,26 +119,3 @@ Hence, there is a good scope of it having bugs and functional issues. Feel free 
 It works based on function caching.Its a very simple dumb caching layer that checks for specific attributes in an API call, converts into a key 
 and stores the response against the key. 
 Any subsequent call having matching attributes will be returned with the value stored against the same key.
-  
-
-## Known Issues / Limitations / To Fix
-
----
-* Botocache currently supports caching of only pickleable objects. Hence API calls 
-  such as file downloads from S3 may not be cached as it uses `io.BufferedReader` which is non-pickleable.
-
-
-* Cache size limit defaults to 1000. This is because botocache created cache are expected to be used across multiple consumers.
-In case, a different consumer sets a different cache size for the same cache location, there will be a constant deletion of 
-  cached items by the consumer which has the least cache limit size among the ones consuming the cache. This is an unnecessary transaction overhead.
-  Hence the hard limit.
-
-
-* Every transaction on the cache sqlite db is synchronised with a file based lock (irrespective of READ / WRITE operation) 
-  by botocache without solely depending on [SQLITE's mechanisms](https://www.sqlite.org/lockingv3.html). 
-  This is to avoid race conditions. Also every transaction results in reopening and closing of the connection to sqlite 
-  database to avoid db corruption in case of multiple consumers. The delay / wait times can be observed significantly in 
-  cases where the consumers are heavy and perform multiple simultaneous API calls.
-  
-  
-&nbsp; &nbsp; &nbsp; Note: Please feel free to provide suggestion / raise PR in case you have a solution to the above issues.
