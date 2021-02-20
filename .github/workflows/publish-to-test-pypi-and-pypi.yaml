@@ -24,6 +24,8 @@ jobs:
           --wheel
           --outdir dist/
       - name: Publish distribution 📦 to Test PyPI
+        # Any release with tags need not be published to Test PYPI , as it would have already been published and may lead to error.
+        if: startsWith(github.ref, 'refs/tags') != true
         uses: pypa/gh-action-pypi-publish@master
         with:
           password: ${{ secrets.TEST_PYPI_API_TOKEN }}
