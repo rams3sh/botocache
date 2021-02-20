@@ -74,7 +74,7 @@ Below snippet demonstrates usage of botocache.
 from boto3.session import Session
 from botocache.botocache import botocache_context
 
-with botocache_context(cache_max_size=100, cache_ttl=900, cache_path=".cache",
+with botocache_context(cache_ttl=900, cache_path=".cache",
                        call_verbs_to_cache=["List", "Get", "Describe"]):
     cached_session = Session()
     cached_client = cached_session.client('iam')
@@ -103,7 +103,7 @@ for page in paginator.paginate():
     print(page)
 
 # New botocache context with a new cache
-new_botocache_context = botocache_context(cache_max_size=100, cache_ttl=900, cache_path=".new_cache",
+new_botocache_context = botocache_context(cache_ttl=900, cache_path=".new_cache",
                        call_verbs_to_cache=["List", "Get", "Describe"])
 
 with new_botocache_context:
@@ -131,12 +131,24 @@ and stores the response against the key.
 Any subsequent call having matching attributes will be returned with the value stored against the same key.
   
 
-* Botocache is completely dependent on underlying [SQLITE's mechanism](https://www.sqlite.org/lockingv3.html) 
-for handling race conditions of concurrent DB read / write across multiple processes. 
-
-## Known Issues
+## Known Issues / Limitations / To Fix
 
 ---
 * Botocache currently supports caching of only pickleable objects. Hence API calls 
   such as file downloads from S3 may not be cached as it uses `io.BufferedReader` which is non-pickleable.
 
+
+* Cache size limit defaults to 1000. This is because botocache created cache are expected to be used across multiple consumers.
+In case, a different consumer sets a different cache size for the same cache location, there will be a constant deletion of 
+  cached items by the consumer which has the least cache limit size among the ones consuming the cache. This is an unnecessary transaction overhead.
+  Hence the hard limit.
+
+
+* Every transaction on the cache sqlite db is synchronised with a file based lock (irrespective of READ / WRITE operation) 
+  by botocache without solely depending on [SQLITE's mechanisms](https://www.sqlite.org/lockingv3.html). 
+  This is to avoid race conditions. Also every transaction results in reopening and closing of the connection to sqlite 
+  database to avoid db corruption in case of multiple consumers. The delay / wait times can be observed significantly in 
+  cases where the consumers are heavy and perform multiple simultaneous API calls.
+  
+  
+&nbsp; &nbsp; &nbsp; Note: Please feel free to provide suggestion / raise PR in case you have a solution to the above issues.

@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
 
 
-def botocache_context(cache_max_size=100, cache_ttl=900, cache_path=".cache",
+def botocache_context(cache_ttl=900, cache_path=".cache",
                       call_verbs_to_cache=["List", "Get", "Describe"],supress_warning_message=False):
 
     cache_type = SQLiteLRUCache
@@ -46,7 +46,7 @@ def botocache_context(cache_max_size=100, cache_ttl=900, cache_path=".cache",
                         logger.error("Error encountered : {}. Retrying the same call without cached context.".format(e))
             return super()._make_api_call(operation_name, api_params)
 
-        @cached(cache=cache_type(maxsize=cache_max_size, ttl=cache_ttl, path=cache_path), key=return_cache_key)
+        @cached(cache=cache_type(maxsize=1000, ttl=cache_ttl, path=cache_path), key=return_cache_key)
         def _make_cached_api_call(self, operation_name, api_params):
             return super()._make_api_call(operation_name, api_params)
 
