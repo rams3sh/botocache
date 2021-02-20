@@ -51,16 +51,6 @@ little to suit the needs of botocache. This  was really a life saver. Thanks to 
 ```
 pip3 install git+https://github.com/rams3sh/botocache.git
 ```
-Note: 
-
-If you encounter `ModuleNotFoundError: No module named 'boto3'` or `ModuleNotFoundError: No module named 'botocore'` error while testing in a fresh environment without any other boto3 / botocore package installation, it's normal. 
-
-Botocache does not include boto3 / botocore sdk as part of it's requirements.txt though botocache is dependant on them.
-It is expected that the target environment where botocache is being installed has some version of boto3 / botocore present already. 
-
-This is to avoid version conflicts between the project's boto library dependency and the botocache's  dependency since botocache is expected to work with any version of boto library.
-
-
 
 
 ## Usage
@@ -121,10 +111,6 @@ a new response to the cache.
 
 ---
 
-* Botocache has been tested only for limited use cases and API calls which has been frequently used by me. 
-This is not production ready as yet. Use this at your own risk.
-
-
 * This project was created mainly to support my internal use cases. 
 Hence, there is a good scope of it having bugs and functional issues. Feel free to raise a PR / Issue in those cases.
 
@@ -141,5 +127,6 @@ for handling race conditions of concurrent DB read / write across multiple proce
 ## Known Issues
 
 ---
-* API calls pertaining to S3 Bucket File download will not be cached as it uses io.BufferedReader which is non-pickeable 
-  and botocache currently supports only pickleable objects. 
+* Botocache currently supports caching of only pickleable objects. Hence API calls 
+  such as file downloads from S3 may not be cached as it uses `io.BufferedReader` which is non-pickleable.
+

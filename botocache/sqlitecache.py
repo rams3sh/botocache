@@ -42,13 +42,10 @@ class SQLiteLRUCache(MutableMapping):
         self.ttl: Optional[int] = ttl
         self.maxsize = maxsize
         self.clear_on_start = clear_on_start
-
-        # Though this is little heavy compared to threading's lock, but this helps this cache from
-        # remaining agnostic of where it is being used (under thread / process context).
-        # The lock is to avoid race conditions while accessing the sqlite cache database.
         self.path.mkdir(parents=True, exist_ok=True)
+        # The lock is to avoid race conditions while accessing the sqlite cache database.
         # Lambda does not support multiprocessing based locks due to issues with /dev/shm
-        # Hence using a file based lock
+        # Hence using a file based lock for having a universal lock reference.
         self.lock = FileLock(lock_file=os.path.join(self.path, "botocache.lock"))
         self.db_name = "botocache.db"
 

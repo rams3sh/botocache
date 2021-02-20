@@ -3,7 +3,7 @@ from cachetools import cached
 import hashlib
 from collections import OrderedDict
 from unittest.mock import patch
-from botocache.SqliteCache import SQLiteLRUCache
+from botocache.sqlitecache import SQLiteLRUCache
 import logging
 
 logger = logging.getLogger(__name__)

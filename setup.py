@@ -5,10 +5,9 @@ with open('requirements.txt') as f:
 
 setuptools.setup(
     name="botocache",
-    version="latest",
     author="rams3sh",
     description="Caching for Boto and Boto3 SDK",
     packages=["botocache"],
     install_requires=required,
-    python_requires='>=3.6',
+    python_requires='>=3.5',
 )
