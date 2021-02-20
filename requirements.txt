@@ -1,4 +1,3 @@
-# botocore is part of boto3. Hence not included as part of this file.
-boto3>=1.17
+botocore
 cachetools==4.2.1
 filelock==3.0.12
