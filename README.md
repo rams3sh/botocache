@@ -74,7 +74,10 @@ cache = FSLRUCache(ttl=900, path=".cache", maxsize=1000)
 
 # action_regex_to_cache parameter consists list of regex to be matched against a given action for considering the call to be cached
 with botocache_context(cache=cache,
-                       action_regex_to_cache=["List.*", "Get.*", "Describe.*"]):
+                       action_regex_to_cache=["List.*", "Get.*", "Describe.*"],  
+                       call_log=True, # This helps in logging all calls made to AWS. Useful while debugging. Default value is False.
+                       supress_warning_message=False # This supresses warning messages encountered while caching. Default value is False. 
+                       ):
   cached_session = Session()
   cached_client = cached_session.client('iam')
   paginator = cached_client.get_paginator('list_users')
