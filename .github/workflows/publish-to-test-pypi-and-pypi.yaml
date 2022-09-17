@@ -1,5 +1,12 @@
 name: Publish Python 🐍 distributions 📦 to TestPyPI and PyPI
-on: push
+on:
+  push:
+    paths-ignore:
+      - 'README.md'
+      - '.gitignore'
+      - '.github/**' # Ignore changes to github workflows
+    branches:
+      - main
 jobs:
   build-n-publish:
     name: Build and publish Python 🐍 distributions 📦 to TestPyPI and PyPI
