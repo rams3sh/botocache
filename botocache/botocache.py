@@ -19,10 +19,15 @@ def botocache_context(cache=None, action_regex_to_cache=["List.*", "Get.*", "Des
     class BotoCache(BaseClient):
 
         def return_cache_key(self, operation_name, api_params):
+            try:
+                    access_key=self._request_signer._credentials.access_key
+            except AttributeError:
+                    # Handle botocore.UNSIGNED requests where _credentials are None
+                    access_key=''
             cache_key = \
                 "{access_key}_{service}_{action}_{region}_{api_params}".format(
                     # Access Key to identify the Principal
-                    access_key=self._request_signer._credentials.access_key,
+                    access_key=access_key,
                     # Service for identifying which service is being queried
                     service=self._service_model.service_name,
                     # Action of the service
