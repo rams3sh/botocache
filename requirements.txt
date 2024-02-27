@@ -1,2 +1,2 @@
 botocore
-cachetools
+cachetools==5.3.3
