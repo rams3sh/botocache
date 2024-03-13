@@ -78,13 +78,14 @@ with botocache_context(cache=cache,
                        call_log=True, # This helps in logging all calls made to AWS. Useful while debugging. Default value is False.
                        supress_warning_message=False # This supresses warning messages encountered while caching. Default value is False. 
                        ):
-  # Initialising session with botocache context
+
   cached_session = Session()
+  # Initialising client with botocache context
   cached_client = cached_session.client('iam')
 
 
 """
-Using cached session for paginating list users
+Using cached client for paginating list users
 """
 paginator = cached_client.get_paginator('list_users')
 for page in paginator.paginate():
