@@ -78,23 +78,21 @@ with botocache_context(cache=cache,
                        call_log=True, # This helps in logging all calls made to AWS. Useful while debugging. Default value is False.
                        supress_warning_message=False # This supresses warning messages encountered while caching. Default value is False. 
                        ):
+  # Initialising session with botocache context
   cached_session = Session()
   cached_client = cached_session.client('iam')
-  paginator = cached_client.get_paginator('list_users')
-  for page in paginator.paginate():
-    print(page)
+
 
 """
-Don't do this, if you want to have a new session without caching. 
-The below paginator object was initialised under the botocache context which means it's subsequent 
-attributes was initialised with patched Botocache class leading it to still use the backend cache. 
+Using cached session for paginating list users
 """
+paginator = cached_client.get_paginator('list_users')
 for page in paginator.paginate():
   print(page)
 
 """
 Always use a fresh initialised session client and subsequent new objects outside the context of botocache to use 
-boto3 without caching layer. Below is an example. 
+boto3 without caching layer.
 """
 
 non_cached_session = Session()
