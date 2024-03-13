@@ -1,2 +1,0 @@
-botocore
-cachetools==5.3.3

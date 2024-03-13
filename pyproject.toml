@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "botocache"
+version = "0.0.6"
+description = "Caching for Boto and Boto3 SDK"
+authors = ["rams3sh"]
+readme = "README.md"
+include=['botocache']
+
+[tool.poetry.dependencies]
+python = ">=3.8"
+botocore = "^1.34.61"
+cachetools = "5.3.3"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

@@ -10,19 +10,21 @@ on:
 jobs:
   build-n-publish:
     name: Build and publish Python 🐍 distributions 📦 to TestPyPI and PyPI
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@master
-      - name: Set up Python 3.7
-        uses: actions/setup-python@v1
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v4
         with:
-          python-version: 3.7
+          python-version: 3.10
+          
       - name: Install pypa/build
         run: >-
             python -m
             pip install
             build
             --user
+
       - name: Build a binary wheel and a source tarball
         run: >-
           python -m
@@ -30,6 +32,7 @@ jobs:
           --sdist
           --wheel
           --outdir dist/
+
       - name: Publish distribution 📦 to Test PyPI
         # Any release with tags need not be published to Test PYPI , as it would have already been published and may lead to error.
         if: startsWith(github.ref, 'refs/tags') != true
@@ -37,6 +40,7 @@ jobs:
         with:
           password: ${{ secrets.TEST_PYPI_API_TOKEN }}
           repository_url: https://test.pypi.org/legacy/
+
       - name: Publish distribution 📦 to PyPI
         if: startsWith(github.ref, 'refs/tags')
         uses: pypa/gh-action-pypi-publish@master
